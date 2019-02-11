@@ -1,5 +1,6 @@
 require 'omniauth-oauth2'
 require 'json'
+require 'jwt'
 
 module OmniAuth
   module Strategies
@@ -25,7 +26,8 @@ module OmniAuth
         {
           name:        raw_info['displayName'],
           image:       raw_info['pictureUrl'],
-          description: raw_info['statusMessage']
+          description: raw_info['statusMessage'],
+          email:       email
         }
       end
 
@@ -36,6 +38,19 @@ module OmniAuth
         raise ::Timeout::Error
       end
 
+      private
+
+      def email
+        decoded_id_token['email']
+      end
+
+      def decoded_id_token
+        JWT.decode(id_token, nil, false, { algorithm: 'HS256' })[0]
+      end
+
+      def id_token
+        access_token.params['id_token']
+      end
     end
   end
 end
